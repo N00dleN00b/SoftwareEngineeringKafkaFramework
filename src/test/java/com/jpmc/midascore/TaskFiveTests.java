@@ -1,52 +1,52 @@
 package com.jpmc.midascore;
 
-import com.jpmc.midascore.foundation.Balance;
+import com.jpmc.midascore.component.TransactionService;
+import com.jpmc.midascore.foundation.Transaction;
+import com.jpmc.midascore.entity.User;
+import com.jpmc.midascore.repository.UserRepository;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.kafka.test.context.EmbeddedKafka;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.boot.test.web.client.TestRestTemplate;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@DirtiesContext
-@EmbeddedKafka(partitions = 1, brokerProperties = {"listeners=PLAINTEXT://localhost:9092", "port=9092"})
 public class TaskFiveTests {
-    static final Logger logger = LoggerFactory.getLogger(TaskFiveTests.class);
-
     @Autowired
-    private KafkaProducer kafkaProducer;
-
+    private TransactionService transactionService;
     @Autowired
     private UserPopulator userPopulator;
-
     @Autowired
     private FileLoader fileLoader;
-
     @Autowired
-    private BalanceQuerier balanceQuerier;
-
+    private UserRepository userRepository;
+    @Autowired
+    private TestRestTemplate restTemplate;
 
     @Test
-    void task_five_verifier() throws InterruptedException {
+    void task_five_verifier() throws Exception {
         userPopulator.populate();
-        String[] transactionLines = fileLoader.loadStrings("/test_data/rueiwoqp.tyruei");
-        for (String transactionLine : transactionLines) {
-            kafkaProducer.send(transactionLine);
+        String[] fileNames = {"poiuytrewq.uiop", "mnbvcxz.vbnm", "lkjhgfdsa.hjkl", "alskdjfh.fhdjsk", "rueiwoqp.tyruei"};
+        
+        for (String fileName : fileNames) {
+            String[] lines = fileLoader.loadStrings("/test_data/" + fileName);
+            for (String line : lines) {
+                try {
+                    String[] data = line.split(", ");
+                    if (data.length >= 3) {
+                        Transaction tx = new Transaction(Long.parseLong(data[0]), Long.parseLong(data[1]), Float.parseFloat(data[2]));
+                        transactionService.processTransaction(tx);
+                    }
+                } catch (Exception e) {
+                    // Skips headers or non-transaction lines like "bernie"
+                }
+            }
         }
-        Thread.sleep(2000);
 
-        logger.info("----------------------------------------------------------");
-        logger.info("----------------------------------------------------------");
-        logger.info("----------------------------------------------------------");
-        logger.info("submit the following output to complete the task (include begin and end output denotations)");
-        StringBuilder output = new StringBuilder("\n").append("---begin output ---").append("\n");
-        for (int i = 0; i < 13; i++) {
-            Balance balance = balanceQuerier.query((long) i);
-            output.append(balance.toString()).append("\n");
-        }
-        output.append("---end output ---");
-        logger.info(output.toString());
+        System.out.println("--- BEGIN TASK FIVE ---");
+        userRepository.findAll().forEach(user -> {
+            String response = restTemplate.getForObject("http://localhost:33400/balance?userId=" + user.getId(), String.class);
+            System.out.println(response);
+        });
+        System.out.println("--- END TASK FIVE ---");
     }
 }

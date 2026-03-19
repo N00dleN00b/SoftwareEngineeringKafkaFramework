@@ -1,5 +1,7 @@
 package com.jpmc.midascore;
 
+import com.jpmc.midascore.entity.User;
+import com.jpmc.midascore.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,8 +25,11 @@ public class TaskThreeTests {
     @Autowired
     private FileLoader fileLoader;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @Test
-    void task_three_verifier() throws InterruptedException {
+    void task_three_verifier() throws Exception {
         userPopulator.populate();
         String[] transactionLines = fileLoader.loadStrings("/test_data/mnbvcxz.vbnm");
         for (String transactionLine : transactionLines) {
@@ -32,15 +37,13 @@ public class TaskThreeTests {
         }
         Thread.sleep(2000);
 
-
         logger.info("----------------------------------------------------------");
-        logger.info("----------------------------------------------------------");
-        logger.info("----------------------------------------------------------");
-        logger.info("use your debugger to find out what waldorf's balance is after all transactions are processed");
-        logger.info("kill this test once you find the answer");
-        while (true) {
-            Thread.sleep(20000);
-            logger.info("...");
+        Iterable<User> users = userRepository.findAll();
+        for (User user : users) {
+            if (user.getName().equalsIgnoreCase("waldorf")) {
+                logger.info("WALDORF FINAL BALANCE: {}", user.getBalance());
+            }
         }
+        logger.info("----------------------------------------------------------");
     }
 }
