@@ -208,5 +208,5 @@ Completed the **JPMorganChase Software Engineering Job Simulation** on Forage 鈥
 
 **Skills demonstrated:** Java 17 路 Spring Boot 路 Apache Kafka 路 Spring Data JPA 路 H2 SQL 路 RestTemplate 路 REST API Design 路 Maven 路 Embedded Kafka Testing
 
-INSERT IMAGE
+[馃搫 View Completion Certificate](./forage.pdf)
 ---
